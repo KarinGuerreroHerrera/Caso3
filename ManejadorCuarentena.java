@@ -5,8 +5,8 @@ public class ManejadorCuarentena extends Thread {
     private BuzonIlimitado cuarentena;
     private Buzon entrega;
     private ArrayList<Mensaje> lista = new ArrayList<>();
-    private int finsRecibidos = 0;
-    private int totalFiltros;
+    private int finsRecibidos = 0; 
+    private int totalFiltros;      
 
     public ManejadorCuarentena(BuzonIlimitado cuarentena, Buzon entrega, int totalFiltros) {
         this.cuarentena = cuarentena;
@@ -14,13 +14,13 @@ public class ManejadorCuarentena extends Thread {
         this.totalFiltros = totalFiltros;
     }
 
-    @Override
     public void run() {
         try {
             while (true) {
-                // Recibir nuevos mensajes de cuarentena
+
                 while (!cuarentena.estaVacio()) {
                     Mensaje m = cuarentena.retirar();
+
                     if (m.tipo.equals("FIN")) {
                         finsRecibidos++;
                         System.out.println("Manejador recibe FIN (" + finsRecibidos + "/" + totalFiltros + ")");
@@ -29,7 +29,6 @@ public class ManejadorCuarentena extends Thread {
                     }
                 }
 
-                // Procesar los mensajes en cuarentena
                 Iterator<Mensaje> it = lista.iterator();
                 while (it.hasNext()) {
                     Mensaje m = it.next();
@@ -47,17 +46,13 @@ public class ManejadorCuarentena extends Thread {
                     }
                 }
 
-                // Condición de salida segura
                 if (finsRecibidos == totalFiltros && lista.isEmpty() && cuarentena.estaVacio()) {
-                    // Replicar el FIN para todos los servidores
-                    for (int i = 0; i < MainMensajeria.numServidores; i++) {
-                        entrega.depositar(new Mensaje("FIN", "FIN", false));
-                    }
-                    System.out.println("Manejador termina y envía FIN a todos los servidores.");
+                    entrega.depositar(new Mensaje("CUARENTENA-FIN", "FIN", false));
+                    System.out.println("Manejador termina.");
                     break;
                 }
 
-                Thread.sleep(1000); // espera semiactiva
+                Thread.sleep(1000);
             }
 
         } catch (InterruptedException e) {

@@ -12,26 +12,18 @@ public class FiltroSpam extends Thread {
         this.cuarentena = cuarentena;
     }
 
-    @Override
     public void run() {
         try {
             while (true) {
-                Mensaje m = entrada.retirar(); // Espera pasiva
+                Mensaje m = entrada.retirar(); 
 
                 if (m.tipo.equals("FIN")) {
                     synchronized (lock) {
                         clientesTerminados++;
                         if (clientesTerminados == MainMensajeria.totalClientes) {
-                            // Esperar hasta que entrada y cuarentena estén vacíos
-                            while (!entrada.estaVacio() || !cuarentena.estaVacio()) {
-                                Thread.yield(); // espera semiactiva
-                            }
-
-                            // Enviar mensaje de FIN solo cuando todo esté vacío
                             cuarentena.depositar(new Mensaje("FIN", "FIN", false));
                             entrega.depositar(new Mensaje("FIN", "FIN", false));
-
-                            System.out.println("Filtro: último FIN, sistema listo para cerrar.");
+                            System.out.println("Filtro: último FIN, termina.");
                             break;
                         }
                     }
@@ -43,10 +35,6 @@ public class FiltroSpam extends Thread {
                     cuarentena.depositar(m);
                     System.out.println("Filtro manda " + m.id + " a cuarentena.");
                 } else {
-                    // Espera semiactiva para entrega
-                    while (entrega.tamaño() >= entrega.getCapacidad()) {
-                        Thread.yield(); // no usar wait aquí
-                    }
                     entrega.depositar(m);
                     System.out.println("Filtro manda " + m.id + " a entrega.");
                 }
